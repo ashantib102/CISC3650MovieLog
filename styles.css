@@ -1,0 +1,150 @@
+/* https://www.w3schools.com/howto/howto_css_responsive_text.asp */
+
+/* Body Animation */
+body {
+  animation: fadeIn 1.5s ease-in-out;
+  font-family: "Yatra One", serif;
+}
+
+/* Image Background */
+.image-container {
+  background-image: url("images/moviecovers.jpg");
+  background-size: cover;
+  position: relative;
+  height: 400px;
+}
+
+/* Title Text */
+.text {
+  font-family: "Mystery Quest", serif;
+  background-color: transparent;
+  color: rgb(255, 255, 255);
+  font-size: 9vw;
+  font-weight: bold;
+  margin: 0 auto;
+  padding: 10px;
+  width: 50%;
+  text-align: center;
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: glow 1s ease-in-out infinite alternate;
+}
+
+/* Hover Effect on .text: Slight Upward Movement */
+.text:hover {
+  transform: translate(-50%, -55%); /* Moves the text upwards */
+}
+
+/* Navbar Slide In from Top */
+.navbar {
+  position: fixed;
+  top: -100px;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  animation: slideInTop 0.5s ease-out forwards 1s;
+}
+
+@keyframes slideInTop {
+  from {
+    top: -100px;
+  }
+  to {
+    top: 0px;
+  }
+}
+
+/* Navbar Font Styles */
+.navbar-nav,
+#deleteButton,
+.navbar-brand,
+.d-flex {
+  font-family: "Yatra One", serif;
+  font-weight: bold;
+}
+
+/* Navbar Items Hover Effect: Glow & Shake */
+.navbar-nav .nav-link,
+.navbar-nav .dropdown-item,
+#deleteButton {
+  transition: text-shadow 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-brand:hover,
+.navbar-nav .dropdown-item:hover,
+#deleteButton:hover {
+  color: #fff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.8),
+    0 0 25px rgba(255, 255, 255, 0.6), 0 0 35px rgba(255, 255, 255, 0.4);
+  animation: shake 0.3s ease-in-out;
+}
+
+/* Shake Animation */
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Glow Animation */
+@keyframes glow {
+  from {
+    text-shadow: 0 0 10px #333, 0 0 20px #333, 0 0 30px #333, 0 0 40px #333,
+      0 0 50px #333, 0 0 60px #333, 0 0 70px #333;
+  }
+  to {
+    text-shadow: 0 0 20px #000, 0 0 30px #000, 0 0 40px #000, 0 0 50px #000,
+      0 0 60px #000, 0 0 70px #000, 0 0 80px #000;
+  }
+}
+
+/* Movie Thumbnails Slide In from Left */
+@keyframes moviesSlideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px); /* Start off the left */
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0); /* End at normal position */
+  }
+}
+
+.img-responsive {
+  width: 10vw;
+  height: auto;
+  animation: moviesSlideInFromLeft 1.5s ease-in-out;
+}
+
+/* Star Ratings */
+.fa-star.checked {
+  color: #ffcc00;
+}
+
+/* Selected Table Rows */
+.selected {
+  background-color: rgba(255, 0, 0, 0.5);
+}
+
+/* Table Column Spacing */
+.table td:nth-child(5),
+.table th:nth-child(5),
+.table td:nth-child(6),
+.table th:nth-child(6) {
+  width: 10vw;
+}
