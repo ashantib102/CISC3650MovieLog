@@ -1,4 +1,4 @@
-// These variables are used to reference DOM elements through the code
+// Variables that reference DOM elements throughout code
 const modal = document.getElementById("exampleModal");
 const getAddMovieData = document.getElementById("addMovieSubmitButton");
 const movieForm = document.getElementById("movieForm");
@@ -171,9 +171,34 @@ async function addMovie() {
   });
 }
 
+// EDIT LOG BUTTON
+document.getElementById("editLogButton").addEventListener("click", function () {
+  // Toggle edit mode
+  window.editMode = !window.editMode;
+
+  // Exit delete mode if we're entering edit mode
+  if (window.editMode && deleteMode) {
+    deleteMode = false;
+    deleteButton.style.backgroundColor = "";
+  }
+
+  // Visual indicator for edit mode
+  if (window.editMode) {
+    this.classList.add("active");
+    alert("Please select a row to edit.");
+  } else {
+    this.classList.remove("active");
+    // Clear any selection when exiting edit mode without selecting
+    if (window.selectedRow) {
+      window.selectedRow.classList.remove("selected");
+      window.selectedRow = null;
+    }
+  }
+});
+
 //Using .innerHTML function: https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
 
-// UPDATE FUNCTION
+// Updating the movie info after the edit log button is triggered
 // Updates an existing movie row with the form data
 function updateMovie() {
   // Get the updated values from the form
@@ -284,7 +309,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         deleteModal.show();
       } else if (window.editMode) {
-        // Handles editing
+        // HANDLES EDITING
         // Clear previous selection
         if (window.selectedRow) {
           window.selectedRow.classList.remove("selected");
@@ -292,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
         row.classList.add("selected");
         window.selectedRow = row;
 
-        // Fill the form with the existing data
+        // Filling the form with the existing data
         const title = row.cells[1].innerText;
         const genre = row.cells[2].innerText;
         const watchStatus = row.cells[4].innerText;
@@ -339,160 +364,164 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-  // Grouping movies by series
-  //Claude AI helped me figure out how to get this code to work
-  let selectedGroupRow = null; //Keep track of what table row is selected
-  let pendingGroupAction = false; //Helps trigger modal automatically once a row is selected
-
-  // Event listener for row selection
-  // Event listener for the "Group Series" option in the navbar
+  //GROUPING MOVIES BY SERIES
+  //Claude AI, ChatGPT and DeepSeek helped me figure out how to get this code to work..they wrote the test cases for
+  // checking whether a movie is a series or not, including the regex patterns
   document
     .getElementById("groupSeriesLink")
     .addEventListener("click", function (event) {
-      event.preventDefault(); // Prevent default behavior of link
+      event.preventDefault(); // Prevent default behavior
 
-      if (!selectedGroupRow) {
-        // No row is selected, show an alert
-        alert("Please select a row first.");
-        pendingGroupAction = true;
-        return; // Exit the function
-      }
+      const allRows = document.querySelectorAll("#myTable tbody tr");
+      const seriesMap = new Map();
 
-      // If we get here, a row is selected, so process the request
-      processGroupSeries();
-    });
+      // Group movies by series
+      allRows.forEach((row) => {
+        const rowTitle = row.cells[1].innerText.trim();
+        const seriesPrefix = getSeriesPrefix(rowTitle); // Extract series prefix
 
-  // Modified row selection event listener
-  document
-    .querySelector("#myTable tbody")
-    .addEventListener("click", function (e) {
-      const row = e.target.closest("tr");
-      if (row) {
-        if (selectedGroupRow) {
-          selectedGroupRow.classList.remove("selected-row");
+        const cover = row.cells[0].innerHTML;
+        const rating = row.cells[5].querySelectorAll(".fa-star.checked").length;
+
+        if (!seriesMap.has(seriesPrefix)) {
+          seriesMap.set(seriesPrefix, []);
         }
-        selectedGroupRow = row;
-        selectedGroupRow.classList.add("selected-row");
+        seriesMap.get(seriesPrefix).push({ cover, title: rowTitle, rating });
+      });
 
-        // Check if user clicked the "Group Series" button but didn't select a row first
-        if (pendingGroupAction) {
-          pendingGroupAction = false;
-          processGroupSeries();
-        }
-      }
+      populateModal(seriesMap);
     });
 
-  // Function to find movies in the same series and have the modal show up
-  function processGroupSeries() {
-    const selectedTitle = selectedGroupRow.cells[1].innerText;
+  // Function to extract series prefix from a title
+  function getSeriesPrefix(title) {
+    // Normalize the title: lowercase and remove special characters
+    const normalizedTitle = title.toLowerCase().replace(/[^a-z0-9\s]/gi, "");
 
-    // Find all movies in the same series (based on the title prefix)
-    const seriesPrefix = selectedTitle.split(":")[0].trim(); // Extract the series name
-    const allRows = document.querySelectorAll("#myTable tbody tr");
-    const seriesMovies = [];
+    // Create a base version of the title without numbers at the end
+    const baseTitle = normalizedTitle.replace(/\s+\d+$/, "");
 
-    allRows.forEach((row) => {
-      const rowTitle = row.cells[1].innerText;
-      if (rowTitle.startsWith(seriesPrefix)) {
-        const cover = row.cells[0].innerHTML; // Get the cover image
-        const ratingCell = row.cells[5];
-        const rating = parseFloat(
-          ratingCell.querySelectorAll(".fa-star.checked").length
-        ); // Count the stars
-        seriesMovies.push({
-          cover: cover,
-          title: rowTitle,
-          rating: rating,
-        });
-      }
-    });
-
-    // If there are other movies in the series, calculate the average rating
-    if (seriesMovies.length > 1) {
-      const totalRating = seriesMovies.reduce(
-        (sum, movie) => sum + movie.rating,
-        0
-      );
-      const averageRating = (totalRating / seriesMovies.length).toFixed(2); // Round to 2 decimal places
-      populateModal(seriesMovies, averageRating);
-    } else {
-      // If only one movie in series
-      const selectedMovieRating = parseFloat(
-        selectedGroupRow.cells[5].querySelectorAll(".fa-star.checked").length
-      );
-      const selectedMovieCover = selectedGroupRow.cells[0].innerHTML; // Get the cover image
-      showSingleMovieModal(
-        selectedTitle,
-        selectedMovieRating,
-        selectedMovieCover
-      );
+    // Add specific series handling for problematic titles
+    if (normalizedTitle.includes("phineas and ferb")) {
+      return "phineas and ferb";
     }
+
+    // Handle titles with subtitles (e.g., "Star Wars: Episode IV")
+    if (baseTitle.includes(":")) {
+      return baseTitle.split(":")[0].trim(); // Take everything before the colon
+    }
+
+    // Handle titles with common prefixes (e.g., "The Lord of the Rings: The Fellowship of the Ring")
+    const commonPrefixes = [
+      "the lord of the rings",
+      "harry potter",
+      "fast and furious",
+      "now you see me", // Added this specific series
+      "star wars",
+      "mission impossible",
+      "jurassic park",
+      "jurassic world",
+    ];
+
+    for (const prefix of commonPrefixes) {
+      if (baseTitle.startsWith(prefix)) {
+        return prefix; // Use the common prefix
+      }
+    }
+
+    // Matching to detect numbered sequels
+    // Example: "Toy Story" and "Toy Story 3" should match
+    const sequelPattern = /^(.+?)(?:\s+\d+)?$/;
+    const match = baseTitle.match(sequelPattern);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+
+    // Fallback: Use the first 3 words as the series prefix
+    const words = baseTitle.split(" ");
+    return words.slice(0, Math.min(3, words.length)).join(" ");
   }
 
-  // Function to add movie details to the modal
-  function populateModal(movies, averageRating) {
-    const tableBody = document.getElementById("groupedMoviesTableBody");
-    const averageRatingText = document.getElementById("averageRatingValue");
+  // debug function
+  function debugSeriesMatching() {
+    const allRows = document.querySelectorAll("#myTable tbody tr");
+    const debugMap = new Map();
 
-    // Clear existing rows
-    tableBody.innerHTML = "";
+    allRows.forEach((row) => {
+      const rowTitle = row.cells[1].innerText.trim();
+      const seriesPrefix = getSeriesPrefix(rowTitle);
 
-    // Display the average rating
-    averageRatingText.textContent = averageRating;
-
-    movies.forEach((movie) => {
-      const row = document.createElement("tr");
-
-      row.innerHTML = `
-      <td>${movie.cover}</td>
-      <td>${movie.title}</td>
-      <td>${movie.rating}</td>
-    `;
-
-      tableBody.appendChild(row);
+      if (!debugMap.has(seriesPrefix)) {
+        debugMap.set(seriesPrefix, []);
+      }
+      debugMap.get(seriesPrefix).push(rowTitle);
     });
+
+    console.log("Series Grouping Debug:");
+    debugMap.forEach((titles, prefix) => {
+      console.log(`Series: "${prefix}" - ${titles.length} movies`);
+      titles.forEach((title) => console.log(`  - ${title}`));
+    });
+  }
+
+  // Function to populate the modal with multiple series tables
+  function populateModal(seriesMap) {
+    const modalBody = document.getElementById("groupedMoviesModal");
+    modalBody.innerHTML = ""; // Clear previous content
+
+    let hasSeries = false; // Track if any valid series is added
+
+    seriesMap.forEach((movies, seriesName) => {
+      if (movies.length >= 2) {
+        // Include series with 2 or more movies only
+        hasSeries = true;
+        const totalRating = movies.reduce(
+          (sum, movie) => sum + movie.rating,
+          0
+        );
+        const averageRating = (totalRating / movies.length).toFixed(2);
+
+        const seriesTable = document.createElement("div");
+        seriesTable.classList.add("mb-4"); // Add spacing between tables
+        seriesTable.innerHTML = `
+        <h5>${
+          seriesName.charAt(0).toUpperCase() + seriesName.slice(1)
+        } (Avg Rating: ${averageRating})</h5>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Cover</th>
+                    <th>Title</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${movies
+                  .map(
+                    (movie) => `
+                        <tr>
+                            <td>${movie.cover}</td>
+                            <td>${movie.title}</td>
+                            <td>${movie.rating}</td>
+                        </tr>`
+                  )
+                  .join("")}
+            </tbody>
+        </table>
+      `;
+        modalBody.appendChild(seriesTable);
+      }
+    });
+
+    // Message if no series met the criteria
+    if (!hasSeries) {
+      modalBody.innerHTML = "<p>No series with 2 or more movies found.</p>";
+    }
 
     // Show modal
     const modal = new bootstrap.Modal(
       document.getElementById("groupSeriesModal")
     );
     modal.show();
-
-    // Reset the selection after showing the modal
-    if (selectedGroupRow) {
-      selectedGroupRow.classList.remove("selected-row");
-      selectedGroupRow = null;
-    }
-  }
-
-  // Function to show the modal for a single movie (no other movies in the series)
-  function showSingleMovieModal(title, rating, cover) {
-    const tableBody = document.getElementById("groupedMoviesTableBody");
-    const averageRatingText = document.getElementById("averageRatingValue");
-
-    // Clear existing rows
-    tableBody.innerHTML = "";
-
-    // Display a message
-    const row = document.createElement("tr");
-    row.innerHTML = `
-    <td colspan="3">No other movies in this series found.</td>
-  `;
-    tableBody.appendChild(row);
-
-    // Display the rating of the selected movie
-    averageRatingText.textContent = rating.toFixed(2);
-
-    // Show the modal
-    const modal = new bootstrap.Modal(
-      document.getElementById("groupSeriesModal")
-    );
-    modal.show();
-
-    if (selectedGroupRow) {
-      selectedGroupRow.classList.remove("selected-row");
-      selectedGroupRow = null;
-    }
   }
 });
 
@@ -517,31 +546,6 @@ if (cancelButton) {
   });
 }
 
-// EDIT FUNCTION
-document.getElementById("editLogButton").addEventListener("click", function () {
-  // Toggle edit mode
-  window.editMode = !window.editMode;
-
-  // Exit delete mode if we're entering edit mode
-  if (window.editMode && deleteMode) {
-    deleteMode = false;
-    deleteButton.style.backgroundColor = "";
-  }
-
-  // Visual indicator for edit mode
-  if (window.editMode) {
-    this.classList.add("active");
-    alert("Please select a row to edit.");
-  } else {
-    this.classList.remove("active");
-    // Clear any selection when exiting edit mode without selecting
-    if (window.selectedRow) {
-      window.selectedRow.classList.remove("selected");
-      window.selectedRow = null;
-    }
-  }
-});
-
 // W3Schools Table Filter: https://www.w3schools.com/howto/howto_js_filter_table.asp
 //https://www.w3schools.com/howto/howto_js_filter_elements.asp
 // JavaScript querySelectorAll: https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll
@@ -549,7 +553,7 @@ document.getElementById("editLogButton").addEventListener("click", function () {
 // Triggering Button Clicks: Trigger Button Click on Enter: https://www.w3schools.com/howto/howto_js_trigger_button_enter.asp
 
 // SEARCH FUNCTIONALITY
-//Got core idea from w3schools but asked DeepSeek for help implementing it
+//Got core idea from w3schools but asked DeepSeek for help implementing and debugging it
 const searchSubmitButton = document.getElementById("searchFilterSubmit");
 const searchInput = document.querySelector(".form-control.me-2"); // Get the search input field
 
@@ -595,7 +599,7 @@ if (searchSubmitButton && searchInput) {
 //HTMLTableElement.tBodies: https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableElement/tBodies
 //Sorting Table Elements Alphabetically by title
 //Links to first drop down button under sort
-//Used ChatGPT to troubleshoot cause my code wouldn't work
+//Used ChatGPT for examples of how to sort tables by specific criteria
 
 function sortTableByTitle() {
   // Select the table inside the div with id "myTable"

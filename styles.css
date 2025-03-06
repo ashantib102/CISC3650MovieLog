@@ -67,7 +67,7 @@ body {
   transition: text-shadow 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
 }
 
-.var .navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:hover,
 .navbar-brand:hover,
 .navbar-nav .dropdown-item:hover,
 #deleteButton:hover {
