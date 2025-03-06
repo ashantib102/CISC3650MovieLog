@@ -442,11 +442,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     movies.forEach((movie) => {
       const row = document.createElement("tr");
+
       row.innerHTML = `
       <td>${movie.cover}</td>
       <td>${movie.title}</td>
       <td>${movie.rating}</td>
     `;
+
       tableBody.appendChild(row);
     });
 

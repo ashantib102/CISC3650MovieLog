@@ -32,11 +32,6 @@ body {
   animation: glow 1s ease-in-out infinite alternate;
 }
 
-/* Hover Effect on .text: Slight Upward Movement */
-.text:hover {
-  transform: translate(-50%, -55%); /* Moves the text upwards */
-}
-
 /* Navbar Slide In from Top */
 .navbar {
   position: fixed;
@@ -56,22 +51,25 @@ body {
   }
 }
 
-.nav-item {
-  color: #fff;
-}
-
 /* Navbar Font Styles */
+.navbar-nav,
+#deleteButton,
+.navbar-brand,
 .d-flex {
   font-family: "Yatra One", serif;
   font-weight: bold;
 }
 
 /* Navbar Items Hover Effect: Glow & Shake */
-
+.navbar-nav .nav-link,
+.navbar-nav .dropdown-item,
 #deleteButton {
   transition: text-shadow 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
 }
 
+.var .navbar-nav .nav-link:hover,
+.navbar-brand:hover,
+.navbar-nav .dropdown-item:hover,
 #deleteButton:hover {
   color: #fff;
   text-shadow: 0 0 15px rgba(255, 255, 255, 0.8),
